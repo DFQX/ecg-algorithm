@@ -9,7 +9,7 @@
 """
 
 
-def r_wave_detected():
+def R_wave_detected():
     pass
 
 
