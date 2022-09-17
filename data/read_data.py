@@ -193,6 +193,7 @@ if __name__ == '__main__':
     plot_data(ecg_data2)
     # plot_ecg_and_annot(ecg_data1[5:], annot, atr_time)    # 打印ecg图和R波位置
 
+
 # if __name__ == '__main__':
 #     path = './mit-bih-arrhythmia'
 #     dat_name = '100.dat'
