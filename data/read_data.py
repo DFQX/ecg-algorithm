@@ -86,7 +86,7 @@ def read_f16(file_path, file_name):
             lead2 -= 2 ** 16
         ecg_data_lead1.append(lead1)
         ecg_data_lead2.append(lead2)
-    plot_data(ecg_data_lead1)  # 绘制导联1的心电图
+    # plot_data(ecg_data_lead1)  # 绘制导联1的心电图
     # plot_data(ecg_data_lead2)  # 绘制导联2的心电图
     return ecg_data_lead1, ecg_data_lead2
 
