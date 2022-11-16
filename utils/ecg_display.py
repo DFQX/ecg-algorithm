@@ -130,6 +130,76 @@ def plot_peak_sig_and_noise_for_win_and_filter(data1, data2, x, y, x1, y1, locs1
     plt.show()
 
 
+def plot_peak_dot(data, x, y):
+    """
+    绘制peak值的点,以及两个阈值的点
+    :param data: 数据
+    :param x: locs, 坐标位置
+    :param y: peak值
+    :return: None
+    """
+    plt.figure(figsize=(12, 4))
+    plt.plot(data)
+    plt.plot(x, y, '*r')
+    plt.show()
+
+def plot_peak_dot_th1_th2(data, x, y, th1, th2):
+    """
+    绘制peak值的点,以及两个阈值的点
+    :param data: 数据
+    :param x: locs, 坐标位置
+    :param y: peak值
+    :return: None
+    """
+    plt.figure(figsize=(12, 4))
+    plt.plot(data)
+    plt.plot(x, y, '*r')
+    plt.plot(x, th1)
+    plt.plot(x, th2)
+    plt.show()
+
+
+def plot_peak_dot_LLV_RLV(data, x, y, LLV, RLV, th1, th2):
+    """
+    绘制peak值的点,以及两个阈值的点
+    :param data: 数据
+    :param x: locs, 坐标位置
+    :param y: peak值
+    :return: None
+    """
+    plt.figure(figsize=(12, 4))
+    plt.plot(data)
+    plt.plot(x, y, '*r')
+    plt.plot(LLV)
+    plt.plot(RLV)
+    plt.plot(x, th1)
+    plt.plot(x, th2)
+    plt.show()
+
+
+def plot_ecg_delay(x, y):
+    """
+    绘制ecg的延迟图
+    """
+    plt.figure(figsize=(12, 4))
+    plt.plot(x, y)
+    plt.show()
+
+
+def plot_ecg_delay_3d(x, y, z):
+    """
+    绘制ecg的延迟图
+    """
+    from mpl_toolkits.mplot3d import Axes3D
+    fig = plt.figure(figsize=(5, 3))
+    ax = Axes3D(fig)
+    ax.plot(x, y, z)
+    ax.tick_params(axis='x', colors='g')
+    ax.tick_params(axis='y', colors='g')
+    ax.tick_params(axis='z', colors='g')
+    plt.show()
+
+
 if __name__ == '__main__':
     path = '../data/paf'
     dat_name = 'n01.dat'

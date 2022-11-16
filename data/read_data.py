@@ -177,9 +177,9 @@ def plot_ecg_and_annot(data, annot, atr_time):
 
 if __name__ == '__main__':
     path = './paf'
-    dat_name = 'n01.dat'
-    hea_name = 'n01.hea'
-    atr_name = 'n01.qrs'
+    dat_name = 'n01c.dat'
+    hea_name = 'n01c.hea'
+    atr_name = 'n01c.qrs'
     atr_info = read_hea(path, hea_name)
     ecg_data1, ecg_data2 = read_f16(path, dat_name)
     # 第一值校验
@@ -190,7 +190,7 @@ if __name__ == '__main__':
     ecg_data2 = [(v - atr_info['zero_value'][1]) / atr_info['gain'][1] for v in ecg_data2]
     # annot, atr_time = read_qrs(path, atr_name)
     annot, atr_time = read_atr(path, atr_name)
-    plot_data(ecg_data2)
+    plot_data(ecg_data1)
     # plot_ecg_and_annot(ecg_data1[5:], annot, atr_time)    # 打印ecg图和R波位置
 
 

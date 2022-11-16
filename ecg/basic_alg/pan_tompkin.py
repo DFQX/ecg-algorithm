@@ -337,16 +337,18 @@ def judge_rule(ecg_filter, ecg_win, peaks, locs, fs=250):
 
 
 if __name__ == '__main__':
-    path = '../../data/paf'
-    dat_name = 'n01.dat'
-    fs = 250
-    ecg_data1, ecg_data2 = rd.read_f16(path, dat_name)
-    ecg = ecg_data1[:2000]  # 原始信号
-    ecg1 = bandpass_filter(ecg, 250, 5, 15)  # 滤波
+    path = '../../data/mit-bih-arrhythmia'
+    dat_name = '105.dat'
+    # fs = 250
+    fs = 360
+    # ecg_data1, ecg_data2 = rd.read_f16(path, dat_name)
+    ecg_data1, ecg_data2 = rd.read_f212(path, dat_name)
+    ecg = ecg_data1[:]  # 原始信号
+    ecg1 = bandpass_filter(ecg, fs, 5, 15)  # 滤波
     ecg2 = derivative(ecg1)  # 差分
     ecg3 = square(ecg2)  # 平方
     ecg4 = moving_window_average(ecg3)  # 积分窗
-    peaks, locs = findpeaks(ecg4, int(0.2 * 250 + 0.5))  # 基准peak
+    peaks, locs = findpeaks(ecg4, int(0.2 * fs + 0.5))  # 基准peak
     qrs_amp_win, qrs_idx_win, qrs_amp_flt, qrs_idx_flt, thrs_win1, thrs_win2, thrs_flt1, thrs_flt2 \
         = judge_rule(ecg1, ecg4, peaks, locs, fs)
     # display.plot_simple_comp(ecg, ecg1, 'Raw ECG', 'Filterd ECG')
