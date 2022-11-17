@@ -104,7 +104,7 @@ def delay_cor(ecg_data, delay_ms=9, fs=250):
     # ------------llv和rlv存储----------------
     llv, rlv = [], []
     llv_q, rlv_q = [0 for val in range(5)], [0 for val in range(5)]
-    l_i = 0  # llv_q 和 rlv_q的下标
+    q_i = 0  # llv_q 和 rlv_q的下标
     thrs_min_regions = []
     llv_sum, rlv_sum = [], []
     # --------------qrs波坐标----------------
@@ -184,9 +184,9 @@ def delay_cor(ecg_data, delay_ms=9, fs=250):
 
         # --------------更新阈值------------------
         if new_qrs and not refra_tag:
-            llv_q[l_i] = llv_sum[-1]
-            rlv_q[l_i] = rlv_sum[-1]
-            l_i = inc_func(l_i, len(llv_q))
+            llv_q[q_i] = llv_sum[-1]
+            rlv_q[q_i] = rlv_sum[-1]
+            q_i = inc_func(q_i, len(llv_q))
             thrs_min = min(min(llv_q), min(rlv_q))
             thrs_max = max(max(llv_q), max(rlv_q))
             thrs_min_region = (thrs_max + thrs_min) / 2
