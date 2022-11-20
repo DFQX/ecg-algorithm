@@ -7,7 +7,7 @@
 """
 import wfdb
 # './paf/n01'是下载来的PAF数据库的文件, channels是选择的导联
-record = wfdb.rdrecord('./paf/n01')
-annotation = wfdb.rdann('./paf/n01', 'qrs')
+record = wfdb.rdrecord('./aha/0201')
+annotation = wfdb.rdann('./aha/0201', 'atr')
 wfdb.plot_wfdb(record=record, annotation=annotation, title='PAF n01', time_units='seconds')
 

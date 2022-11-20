@@ -159,7 +159,7 @@ def plot_peak_dot_th1_th2(data, x, y, th1, th2):
     plt.show()
 
 
-def plot_peak_dot_LLV_RLV(data, x, y, LLV, RLV, th1, th2):
+def plot_peak_dot_llv_rlv(data, x, y, LLV, RLV, th1, th2):
     """
     绘制peak值的点,以及两个阈值的点
     :param data: 数据
@@ -181,7 +181,7 @@ def plot_ecg_delay(x, y):
     """
     绘制ecg的延迟图
     """
-    plt.figure(figsize=(12, 4))
+    plt.figure(figsize=(5, 4))
     plt.plot(x, y)
     plt.show()
 
@@ -191,7 +191,7 @@ def plot_ecg_delay_3d(x, y, z):
     绘制ecg的延迟图
     """
     from mpl_toolkits.mplot3d import Axes3D
-    fig = plt.figure(figsize=(5, 3))
+    fig = plt.figure(figsize=(5, 4))
     ax = Axes3D(fig)
     ax.plot(x, y, z)
     ax.tick_params(axis='x', colors='g')

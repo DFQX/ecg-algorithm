@@ -112,14 +112,14 @@ def delay_cor(ecg_data, delay_ms=9, fs=250):
     new_qrs = False
     refra_count, refra_tag = 1, False  # 不应期
 
-    for i in range(delay_n, len(ecg_data)):
-        x.append(ecg_data[i - delay_n])
-        y.append(ecg_data[i])
+    for i in range(delay_n, len(y_n)):
+        x.append(y_n[i])
+        y.append(y_n[i - delay_n])
 
         # -----------计算d(n)-----------
         idx = i - delay_n
         if idx >= 1:  # 最少有xi(0),xi(1)
-            d.append([y[idx] - y[idx - 1], x[idx] - x[idx - 1]])
+            d.append(abs([y[idx] - y[idx - 1], x[idx] - x[idx - 1]]))
         if idx >= 2:  # len(d)>=2
             v.append(det_2(d[-2:]))  # np.linalg.det(d)
             v_count += 1
@@ -137,7 +137,7 @@ def delay_cor(ecg_data, delay_ms=9, fs=250):
             if idx // fs < 2:
                 thrs1 = 0.25 * max(llv_sum)
                 thrs2 = thrs1
-                if idx // fs < 1:   # 前一秒不进行阈值判断
+                if idx // fs < 1:  # 前一秒不进行阈值判断
                     continue
 
             if not new_qrs and not refra_tag and len(llv_sum) > 2:
@@ -216,8 +216,8 @@ def d_cor(ecg_data, delay=9, fs=250):
     """
     x_data, y_data = [], []
     d_point = int(delay * fs / 1000 + 0.5)
-    x_data = ecg_data[0:-d_point]
-    y_data = ecg_data[d_point:]
+    y_data = ecg_data[0:-d_point]
+    x_data = ecg_data[d_point:]
     dp.plot_ecg_delay(x_data, y_data)
     return x_data, y_data
 
@@ -228,11 +228,25 @@ def d_cor_3d(ecg_data, delay=9, fs=250):
     """
     x_data, y_data, z_data = [], [], []
     d_point = int(delay * fs / 1000 + 0.5)
-    x_data = ecg_data[0:-d_point * 2]
+    z_data = ecg_data[0:-d_point * 2]
     y_data = ecg_data[d_point:-d_point]
-    z_data = ecg_data[d_point * 2:]
+    x_data = ecg_data[d_point * 2:]
     dp.plot_ecg_delay_3d(x_data, y_data, z_data)
     return x_data, y_data, z_data
+
+
+def v_cal(ecg_data, delay, fs):
+    delay_n = int(delay * fs / 1000 + 0.5)  # 延迟坐标点
+    x, y, d, v = [], [], [], []
+    for i in range(delay_n, len(ecg_data)):
+        x.append(ecg_data[i - delay_n])
+        y.append(ecg_data[i])
+        idx = i - delay_n
+        if idx >= 1:  # 最少有xi(0),xi(1)
+            d.append([y[idx] - y[idx - 1], x[idx] - x[idx - 1]])
+        if idx >= 2:  # len(d)>=2
+            v.append(det_2(d[-2:]))  # np.linalg.det(d)
+    return v
 
 
 def left_padding(data, num=4):
@@ -245,25 +259,45 @@ def left_padding(data, num=4):
     return [0 for v in range(4)] + data
 
 
+def batch_v_plot(ecg_data, delay_ms_arr, fs, high=2):
+    v_all = []
+    for delay in delay_ms_arr:
+        v_all.append(v_cal(ecg_data, delay, fs))
+    from matplotlib import pyplot as plt
+    plt.figure(figsize=(10, len(v_all) * high))
+    plt.subplot(len(v_all) + 1, 1, 1)
+    plt.plot(ecg_data)
+    plt.title('(a) Bandpass Filter')
+    for i in range(len(v_all)):
+        plt.subplot(len(v_all) + 1, 1, i + 2)
+        plt.tight_layout()
+        plt.subplots_adjust(hspace=1, wspace=0.2)
+        plt.plot(v_all[i])
+        plt.title('({}) {}ms delay'.format(chr(ord('a') + 1 + i), delay_ms_arr[i]))
+    plt.show()
+
+
 if __name__ == '__main__':
-    path = '../../data/mit-bih-arrhythmia'
-    dat_name = '105.dat'
-    # fs = 250
-    fs = 360
+    # path = '../../data/mit-bih-arrhythmia'
+    # dat_name = '100.dat'
+    # fs = 360
+    path = '../../data/aha'
+    dat_name = '0201.dat'
+    fs = 250
     # ecg_data1, ecg_data2 = rd.read_f16(path, dat_name)
     ecg_data1, ecg_data2 = rd.read_f212(path, dat_name)
-    ecg = ecg_data1[:100000]
-    # ecg1 = sig.bandpass_filter(ecg, fs, 1, 35)
-    # v_n = delay_cor(ecg1, delay_ms=9, fs=fs)
-    # d_cor(ecg, 9, fs)  # 绘制坐标延迟
-    # d_cor_3d(ecg1, 9, fs)  # 绘制3D坐标
-    v, llv_sum, rlv_sum, qrs, qrs_i, thrs1_arr, thrs2_arr = delay_cor(ecg, 9, fs)
+    ecg = ecg_data1[2500:7500]
+    ecg1 = sig.bandpass_filter(ecg, fs, 1, 20)  # 单独滤波
+    # d_cor(ecg, 50, fs)     # 绘制坐标延迟
+    # d_cor_3d(ecg, 9, fs)   # 绘制3D坐标
 
-    dp.plot_simple_comp(ecg, v)
-    # dp.plot_simple_comp(ecg, ecg1)
-    # dp.plot_simple_comp(SUM_LLV_LIST, SUM_RLV_LIST)
-    # dp.plot_simple_comp(ecg3, ecg4)
-    dp.plot_peak_dot(v, qrs_i, qrs)
-    # dp.plot_peak_dot_th1_th2(V, QRS_i, QRS, thrs1_arr, thrs2_arr)
+    # batch_v_plot(ecg1, [8, 16, 25, 33, 42, 50], fs)  # 打印多个V(n)向量图
 
-    dp.plot_peak_dot_llv_rlv(v, qrs_i, qrs, left_padding(llv_sum), left_padding(rlv_sum), thrs1_arr, thrs2_arr)
+    v = v_cal(ecg1, 8, fs)   # 单独计算V(n)
+
+    # dp.plot_simple_comp(ecg, ecg1, 'Row', 'Bandpass Filter')   # 滤波前后数据对比
+    dp.plot_simple_comp(ecg, v, 'Row ECG', 'V(n)')   # 原始数据和V(n)的对比
+    # dp.plot_peak_dot(v, qrs_i, qrs)
+
+    # v, llv_sum, rlv_sum, qrs, qrs_i, thrs1_arr, thrs2_arr = delay_cor(ecg, 8, fs)
+    # dp.plot_peak_dot_llv_rlv(v, qrs_i, qrs, left_padding(llv_sum), left_padding(rlv_sum), thrs1_arr, thrs2_arr)
