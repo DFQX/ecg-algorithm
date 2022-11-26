@@ -59,7 +59,7 @@ def det_2(array):
     return array[0][0] * array[1][1] - array[0][1] * array[1][0]
 
 
-def max_func(arr):
+def find_max(arr):
     """
     一维列表中最大值和下标
     :param arr:  一维数组
@@ -91,7 +91,7 @@ def delay_cor(ecg_data, delay_ms=9, fs=250):
     delay_n = int(delay_ms * fs / 1000 + 0.5)  # 延迟坐标点
 
     # ----------------滤波-------------------
-    y_n = sig.bandpass_filter(ecg_data, fs, 1, 35)
+    y_n = sig.bandpass_filter(ecg_data, fs, 1, 20)
     # -------------延迟坐标存储----------------
     x, y = [], []
     # -------------行列式存储----------------
@@ -113,13 +113,14 @@ def delay_cor(ecg_data, delay_ms=9, fs=250):
     refra_count, refra_tag = 1, False  # 不应期
 
     for i in range(delay_n, len(y_n)):
-        x.append(y_n[i])
-        y.append(y_n[i - delay_n])
+        x.append(y_n[i - delay_n])
+        y.append(y_n[i])
+
 
         # -----------计算d(n)-----------
         idx = i - delay_n
         if idx >= 1:  # 最少有xi(0),xi(1)
-            d.append(abs([y[idx] - y[idx - 1], x[idx] - x[idx - 1]]))
+            d.append([y[idx] - y[idx - 1], x[idx] - x[idx - 1]])
         if idx >= 2:  # len(d)>=2
             v.append(det_2(d[-2:]))  # np.linalg.det(d)
             v_count += 1
@@ -131,8 +132,8 @@ def delay_cor(ecg_data, delay_ms=9, fs=250):
 
         # ---------阈值判断-------------
         if idx >= 6:
-            llv_sum.append(llv[-1] + llv[-2] + llv[-3])  # llv_sum和rlv_sum会比v长度少4
-            rlv_sum.append(rlv[-1] + rlv[-2] + rlv[-3])
+            llv_sum.append((llv[-1] + llv[-2] + llv[-3])/5)  # llv_sum和rlv_sum会比v长度少4
+            rlv_sum.append((rlv[-1] + rlv[-2] + rlv[-3])/5)
             # ------使用两秒来进行初始化阈值----------
             if idx // fs < 2:
                 thrs1 = 0.25 * max(llv_sum)
@@ -161,21 +162,21 @@ def delay_cor(ecg_data, delay_ms=9, fs=250):
             rr_i = qrs_i if len(qrs_i) <= 9 else qrs_i[-9:]  # 计算rr间期均值，一般8个rr间期的
             rr = diff(rr_i)
             rr_avg = sum(rr) / len(rr)
-            if v_count - 1 - qrs_i[-1] > rr_avg * 1.5:  # 与上一次r波波峰位置大于最近的rr间期的1.5倍
+            if v_count - 1 - qrs_i[-1] > rr_avg * 1.6:  # 与上一次r波波峰位置大于最近的rr间期的1.5倍
                 refra = int(0.2 * fs + 0.5)  # 不应期
                 start = qrs_i[-1] + refra
-                l_v, l_i = max_func(llv_sum[start:-1])
+                l_v, l_i = find_max(llv_sum[start:-1])
                 r_v = max(rlv_sum[start:-1])
                 r_i = start + l_i
                 if l_v > thrs1 * 0.8 and r_v > thrs1 * 0.8:
-                    qrs.append(v[r_i - 1])
-                    qrs_i.append(r_i - 1)
+                    qrs.append(v[r_i])
+                    qrs_i.append(r_i)
                     new_qrs = True
                     thrs1_arr.append(thrs1 * 0.8)
                     thrs2_arr.append(thrs2 * 0.5)
                 elif l_v > thrs2 * 0.5 or r_v > thrs2 * 0.5:
-                    qrs.append(v[r_i - 1])
-                    qrs_i.append(r_i - 1)
+                    qrs.append(v[r_i])
+                    qrs_i.append(r_i)
                     new_qrs = True
                     thrs1_arr.append(thrs1 * 0.8)
                     thrs2_arr.append(thrs2 * 0.5)
@@ -189,12 +190,12 @@ def delay_cor(ecg_data, delay_ms=9, fs=250):
             q_i = inc_func(q_i, len(llv_q))
             thrs_min = min(min(llv_q), min(rlv_q))
             thrs_max = max(max(llv_q), max(rlv_q))
-            thrs_min_region = (thrs_max + thrs_min) / 2
+            thrs_min_region = (thrs_max + thrs_min) * 0.75
             thrs_min_regions.append(thrs_min_region)
             # 两个阈值最少需要两个或者三个thrs_min_region值
-            if len(thrs_min_regions) >= 3:
-                thrs1 = sum(thrs_min_regions[-2:]) / 2
-                thrs2 = sum(thrs_min_regions[-3:]) / 3
+            if len(thrs_min_regions) >= 5:
+                thrs1 = sum(thrs_min_regions[-5:]) / 5
+                thrs2 = sum(thrs_min_regions[-5:]) / 5
             else:
                 thrs1 = sum(thrs_min_regions) / (len(thrs_min_regions))
                 thrs2 = thrs1
@@ -256,7 +257,7 @@ def left_padding(data, num=4):
     :param num: 默认4
     :return: list
     """
-    return [0 for v in range(4)] + data
+    return [0 for v in range(2)] + data
 
 
 def batch_v_plot(ecg_data, delay_ms_arr, fs, high=2):
@@ -281,12 +282,12 @@ if __name__ == '__main__':
     # path = '../../data/mit-bih-arrhythmia'
     # dat_name = '100.dat'
     # fs = 360
-    path = '../../data/aha'
-    dat_name = '0201.dat'
-    fs = 250
+    path = '../../data/mit-bih-arrhythmia'
+    dat_name = '114.dat'
+    fs = 360
     # ecg_data1, ecg_data2 = rd.read_f16(path, dat_name)
     ecg_data1, ecg_data2 = rd.read_f212(path, dat_name)
-    ecg = ecg_data1[2500:7500]
+    ecg = ecg_data1[290000:310000]
     ecg1 = sig.bandpass_filter(ecg, fs, 1, 20)  # 单独滤波
     # d_cor(ecg, 50, fs)     # 绘制坐标延迟
     # d_cor_3d(ecg, 9, fs)   # 绘制3D坐标
@@ -296,8 +297,11 @@ if __name__ == '__main__':
     v = v_cal(ecg1, 8, fs)   # 单独计算V(n)
 
     # dp.plot_simple_comp(ecg, ecg1, 'Row', 'Bandpass Filter')   # 滤波前后数据对比
-    dp.plot_simple_comp(ecg, v, 'Row ECG', 'V(n)')   # 原始数据和V(n)的对比
+    # dp.plot_simple_comp(ecg, v, 'Row ECG', 'V(n)')   # 原始数据和V(n)的对比
     # dp.plot_peak_dot(v, qrs_i, qrs)
 
-    # v, llv_sum, rlv_sum, qrs, qrs_i, thrs1_arr, thrs2_arr = delay_cor(ecg, 8, fs)
-    # dp.plot_peak_dot_llv_rlv(v, qrs_i, qrs, left_padding(llv_sum), left_padding(rlv_sum), thrs1_arr, thrs2_arr)
+    v, llv_sum, rlv_sum, qrs, qrs_i, thrs1_arr, thrs2_arr = delay_cor(ecg, 8, fs)
+    dp.plot_peak_dot_llv_rlv(v, qrs_i, qrs, left_padding(llv_sum), left_padding(rlv_sum), thrs1_arr, thrs2_arr)
+    # dp.plot_peak_dot_llv_rlv(v, qrs_i, qrs, llv_sum, rlv_sum, thrs1_arr, thrs2_arr)
+    # dp.plot_peak_dot(v, qrs_i, qrs)
+    dp.subplot_peaks(ecg1, v, qrs_i, qrs, 'ECG', 'R peaks')

@@ -64,23 +64,26 @@ def plot_peaks(data, locs, vals, title=''):
     plt.show()
 
 
-def subplot_peaks(data1, data2, locs, vals, title=''):
+def subplot_peaks(data1, data2, locs, vals,title1='', title2=''):
     """
     打印信号2波峰位置, 同时将两条数据进行比对
+    :param title2: str, 图形的标题, 默认为空
+    :param title1: str, 图形的标题, 默认为空
     :param data1: list, 信号1数据
     :param data2: list, 信号2数据
     :param locs: list, 位置数据
     :param vals: list, peak的值
-    :param title: str, 图形的标题, 默认为空
     :return: None
     """
-    plt.figure(figsize=(13, 3))
+    plt.figure(figsize=(13, 5))
     plt.subplot(211)
     plt.plot(data1)
+    plt.title(title1)
     plt.subplot(212)
     plt.plot(data2)
     plt.plot(locs, vals, 'r*')
-    plt.title(title)
+    plt.title(title2)
+    plt.tight_layout()
     plt.show()
 
 
